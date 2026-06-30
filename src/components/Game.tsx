@@ -23,32 +23,9 @@ const OVERLAY_HEIGHT = 140;
 const OVERLAY_Y_OFFSET = 70;
 const SCORE_TEXT_X = 22;
 const SCORE_TEXT_Y = 52;
+const CHICKEN_ICON_URL = "https://img.icons8.com/?size=96&id=101707&format=png";
 
 const randomPipeHeight = () => PIPE_MIN_HEIGHT + Math.random() * PIPE_HEIGHT_RANGE;
-
-const playTickleSound = () => {
-    const AudioContext = (window as any).AudioContext || (window as any).webkitAudioContext;
-    if (!AudioContext) return;
-
-    const ctx = new AudioContext();
-    const makePulse = (frequency: number, start: number) => {
-        const oscillator = ctx.createOscillator();
-        const gain = ctx.createGain();
-        oscillator.type = "triangle";
-        oscillator.frequency.setValueAtTime(frequency, ctx.currentTime + start);
-        gain.gain.setValueAtTime(0.0001, ctx.currentTime + start);
-        gain.gain.exponentialRampToValueAtTime(0.15, ctx.currentTime + start + 0.02);
-        gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + start + 0.18);
-        oscillator.connect(gain);
-        gain.connect(ctx.destination);
-        oscillator.start(ctx.currentTime + start);
-        oscillator.stop(ctx.currentTime + start + 0.18);
-    };
-
-    makePulse(580, 0);
-    makePulse(430, 0.08);
-    setTimeout(() => ctx.close(), 400);
-};
 
 const defaultPipes = [
     { x: 520, y: randomPipeHeight() },
@@ -77,6 +54,7 @@ export const useGame = (): GameContextType => {
 export default function Game() {
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
     const gameContainerRef = useRef<HTMLDivElement | null>(null);
+    const chickenImageRef = useRef<HTMLImageElement | null>(null);
     const [score, setScore] = useState(0);
     const [gameState, setGameState] = useState<GameState>("start");
     const chicken = useRef({ x: BIRD_START_X, y: BIRD_START_Y, vy: 0 });
@@ -104,7 +82,6 @@ export default function Game() {
     const performJump = () => {
         if (!isAlive.current) return;
         chicken.current.vy = JUMP_VELOCITY;
-        playTickleSound();
     };
 
     const enterFullscreen = () => {
@@ -139,6 +116,18 @@ export default function Game() {
         window.addEventListener("keydown", handleKeyDown);
         return () => window.removeEventListener("keydown", handleKeyDown);
     }, [gameState]);
+
+    useEffect(() => {
+        const chickenImage = new Image();
+        chickenImage.src = CHICKEN_ICON_URL;
+        chickenImage.onload = () => {
+            chickenImageRef.current = chickenImage;
+        };
+
+        return () => {
+            chickenImageRef.current = null;
+        };
+    }, []);
 
     useEffect(() => {
         if (!canvasRef.current) return;
@@ -199,37 +188,41 @@ export default function Game() {
             ctx.fillStyle = "#53912d";
             ctx.fillRect(0, CANVAS_HEIGHT - FLOOR_HEIGHT - FLOOR_BORDER_HEIGHT, CANVAS_WIDTH, FLOOR_BORDER_HEIGHT);
 
-            ctx.fillStyle = "#ffcf6a";
-            ctx.beginPath();
-            ctx.ellipse(chicken.current.x + BIRD_SIZE / 2, chicken.current.y + BIRD_SIZE / 2, BIRD_SIZE / 2, BIRD_SIZE / 2.4, 0, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.fillStyle = "#ff8c00";
-            ctx.beginPath();
-            ctx.ellipse(chicken.current.x + BIRD_SIZE / 2, chicken.current.y + 18, 16, 11, 0, 0, Math.PI * 2);
-            ctx.fill();
+            if (chickenImageRef.current) {
+                ctx.drawImage(chickenImageRef.current, chicken.current.x, chicken.current.y, BIRD_SIZE, BIRD_SIZE);
+            } else {
+                ctx.fillStyle = "#ffcf6a";
+                ctx.beginPath();
+                ctx.ellipse(chicken.current.x + BIRD_SIZE / 2, chicken.current.y + BIRD_SIZE / 2, BIRD_SIZE / 2, BIRD_SIZE / 2.4, 0, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = "#ff8c00";
+                ctx.beginPath();
+                ctx.ellipse(chicken.current.x + BIRD_SIZE / 2, chicken.current.y + 18, 16, 11, 0, 0, Math.PI * 2);
+                ctx.fill();
 
-            ctx.fillStyle = "#ffffff";
-            ctx.beginPath();
-            ctx.ellipse(chicken.current.x + 18, chicken.current.y + 14, 7, 8, 0, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.fillStyle = "#000";
-            ctx.beginPath();
-            ctx.arc(chicken.current.x + 20, chicken.current.y + 14, 3, 0, Math.PI * 2);
-            ctx.fill();
+                ctx.fillStyle = "#ffffff";
+                ctx.beginPath();
+                ctx.ellipse(chicken.current.x + 18, chicken.current.y + 14, 7, 8, 0, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = "#000";
+                ctx.beginPath();
+                ctx.arc(chicken.current.x + 20, chicken.current.y + 14, 3, 0, Math.PI * 2);
+                ctx.fill();
 
-            ctx.fillStyle = "#d52b1e";
-            ctx.beginPath();
-            ctx.moveTo(chicken.current.x + 14, chicken.current.y - 4);
-            ctx.lineTo(chicken.current.x + 22, chicken.current.y - 24);
-            ctx.lineTo(chicken.current.x + 28, chicken.current.y - 6);
-            ctx.fill();
+                ctx.fillStyle = "#d52b1e";
+                ctx.beginPath();
+                ctx.moveTo(chicken.current.x + 14, chicken.current.y - 4);
+                ctx.lineTo(chicken.current.x + 22, chicken.current.y - 24);
+                ctx.lineTo(chicken.current.x + 28, chicken.current.y - 6);
+                ctx.fill();
 
-            ctx.fillStyle = "#ffb84d";
-            ctx.beginPath();
-            ctx.moveTo(chicken.current.x + 30, chicken.current.y + 22);
-            ctx.lineTo(chicken.current.x + 46, chicken.current.y + 20);
-            ctx.lineTo(chicken.current.x + 34, chicken.current.y + 28);
-            ctx.fill();
+                ctx.fillStyle = "#ffb84d";
+                ctx.beginPath();
+                ctx.moveTo(chicken.current.x + 30, chicken.current.y + 22);
+                ctx.lineTo(chicken.current.x + 46, chicken.current.y + 20);
+                ctx.lineTo(chicken.current.x + 34, chicken.current.y + 28);
+                ctx.fill();
+            }
 
             if (gameState === "running") {
                 pipesRef.current.forEach((pipe) => {
