@@ -331,12 +331,17 @@ export default function Game() {
 
     return (
         <GameContext.Provider value={{ gameState, score, startGame, performJump }}>
-            <div ref={gameContainerRef} className="canvas-wrap" onPointerDown={handlePointerDown} onClick={(e) => e.preventDefault()}>
-                <canvas ref={canvasRef} width={CANVAS_WIDTH} height={CANVAS_HEIGHT} />
+            <div
+                ref={gameContainerRef}
+                className="relative h-screen w-screen overflow-hidden bg-transparent touch-none cursor-pointer"
+                onPointerDown={handlePointerDown}
+                onClick={(e) => e.preventDefault()}
+            >
+                <canvas ref={canvasRef} width={CANVAS_WIDTH} height={CANVAS_HEIGHT} className="block h-full w-full" />
                 {isTouch && gameState !== "running" && (
                     <button
                         type="button"
-                        className="fullscreen-button"
+                        className="absolute bottom-6 left-1/2 z-10 -translate-x-1/2 rounded-full border-none bg-[#ffb84d] px-4 py-3 text-[0.98rem] font-bold text-[#1f2a44] shadow-[0_10px_24px_rgba(0,0,0,0.25)] active:scale-[0.98]"
                         onPointerDown={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
@@ -347,7 +352,9 @@ export default function Game() {
                     </button>
                 )}
                 {gameState !== "running" && !overlayText && (
-                    <div className="touch-hint">{isTouch ? TOUCH_HINT_TEXT : KEYBOARD_HINT_TEXT}</div>
+                    <div className="pointer-events-none absolute inset-0 grid place-items-center bg-[linear-gradient(180deg,rgba(4,16,38,0.14),rgba(2,11,24,0.78))] p-[18px] text-center text-[1.05rem] text-[#f4f9ff]">
+                        {isTouch ? TOUCH_HINT_TEXT : KEYBOARD_HINT_TEXT}
+                    </div>
                 )}
             </div>
         </GameContext.Provider>
