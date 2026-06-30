@@ -24,6 +24,12 @@ const OVERLAY_Y_OFFSET = 70;
 const SCORE_TEXT_X = 22;
 const SCORE_TEXT_Y = 52;
 const CHICKEN_ICON_URL = "https://img.icons8.com/?size=96&id=101707&format=png";
+const CLOUD_SPEED = 0.5;
+const CLOUDS = [
+    { x: 80, y: 120, width: 70, height: 34 },
+    { x: 250, y: 180, width: 92, height: 42 },
+    { x: 380, y: 95, width: 64, height: 30 }
+];
 
 const randomPipeHeight = () => PIPE_MIN_HEIGHT + Math.random() * PIPE_HEIGHT_RANGE;
 
@@ -58,6 +64,7 @@ export default function Game() {
     const [score, setScore] = useState(0);
     const [gameState, setGameState] = useState<GameState>("start");
     const chicken = useRef({ x: BIRD_START_X, y: BIRD_START_Y, vy: 0 });
+    const cloudsRef = useRef(CLOUDS.map((cloud) => ({ ...cloud })));
     const gravity = useRef(GRAVITY);
     const animationRef = useRef(0);
     const scoreRef = useRef(0);
@@ -175,13 +182,14 @@ export default function Game() {
             ctx.arc(380, 80, 70, 0, Math.PI * 2);
             ctx.fill();
 
-            ctx.fillStyle = "#ffffffcc";
-            ctx.beginPath();
-            ctx.ellipse(120, 85, 45, 22, 0, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.beginPath();
-            ctx.ellipse(180, 120, 55, 24, 0, 0, Math.PI * 2);
-            ctx.fill();
+            cloudsRef.current.forEach((cloud) => {
+                ctx.fillStyle = "rgba(255, 255, 255, 0.95)";
+                ctx.beginPath();
+                ctx.ellipse(cloud.x + 18, cloud.y + 16, 18, 14, 0, 0, Math.PI * 2);
+                ctx.ellipse(cloud.x + 40, cloud.y + 12, 22, 16, 0, 0, Math.PI * 2);
+                ctx.ellipse(cloud.x + 62, cloud.y + 16, 18, 14, 0, 0, Math.PI * 2);
+                ctx.fill();
+            });
 
             ctx.fillStyle = "#74c24d";
             ctx.fillRect(0, CANVAS_HEIGHT - FLOOR_HEIGHT, CANVAS_WIDTH, FLOOR_HEIGHT);
@@ -260,6 +268,14 @@ export default function Game() {
                 animationRef.current = requestAnimationFrame(step);
                 return;
             }
+
+            cloudsRef.current = cloudsRef.current.map((cloud) => {
+                let nextX = cloud.x - CLOUD_SPEED;
+                if (nextX + cloud.width < -40) {
+                    nextX = CANVAS_WIDTH + 40;
+                }
+                return { ...cloud, x: nextX };
+            });
 
             chicken.current.vy += gravity.current;
             chicken.current.y += chicken.current.vy;
