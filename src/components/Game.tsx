@@ -1,53 +1,46 @@
 import React, { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
-
-const CANVAS_WIDTH = 480;
-const CANVAS_HEIGHT = 720;
-const BIRD_SIZE = 36;
-const BIRD_START_X = 120;
-const BIRD_START_Y = (CANVAS_HEIGHT - BIRD_SIZE) / 2;
-const PIPE_WIDTH = 80;
-const PIPE_GAP = 190;
-const PIPE_SPEED = 2.2;
-const PIPE_MIN_HEIGHT = 120;
-const PIPE_HEIGHT_RANGE = 320;
-const GRAVITY = 0.24;
-const JUMP_VELOCITY = -4.2;
-const PIPE_SPAWN_SPACING = 320;
-const PIPE_START_OFFSET = 300;
-const PIPE_RESPAWN_OFFSET = 240;
-const FLOOR_HEIGHT = 100;
-const FLOOR_BORDER_HEIGHT = 16;
-const PIPE_CAP_HEIGHT = 20;
-const OVERLAY_PADDING = 40;
-const OVERLAY_HEIGHT = 140;
-const OVERLAY_Y_OFFSET = 70;
-const SCORE_TEXT_X = 22;
-const SCORE_TEXT_Y = 52;
-const CHICKEN_ICON_URL = "https://img.icons8.com/?size=96&id=101707&format=png";
-const CLOUD_SPEED = 0.5;
-const CLOUDS = [
-    { x: 80, y: 120, width: 70, height: 34 },
-    { x: 250, y: 180, width: 92, height: 42 },
-    { x: 380, y: 95, width: 64, height: 30 }
-];
+import {
+    BIRD_SIZE,
+    BIRD_START_X,
+    BIRD_START_Y,
+    CANVAS_HEIGHT,
+    CANVAS_WIDTH,
+    CHICKEN_ICON_URL,
+    CLOUDS,
+    CLOUD_SPEED,
+    FLOOR_BORDER_HEIGHT,
+    FLOOR_HEIGHT,
+    FULLSCREEN_BUTTON_TEXT,
+    GAME_OVER_TEXT,
+    GRAVITY,
+    JUMP_VELOCITY,
+    KEYBOARD_HINT_TEXT,
+    OVERLAY_HEIGHT,
+    OVERLAY_PADDING,
+    OVERLAY_Y_OFFSET,
+    PIPE_CAP_HEIGHT,
+    PIPE_GAP,
+    PIPE_HEIGHT_RANGE,
+    PIPE_MIN_HEIGHT,
+    PIPE_RESPAWN_OFFSET,
+    PIPE_SPEED,
+    PIPE_SPAWN_SPACING,
+    PIPE_START_OFFSET,
+    PIPE_WIDTH,
+    SCORE_LABEL,
+    SCORE_TEXT_X,
+    SCORE_TEXT_Y,
+    START_TEXT,
+    TOUCH_GAME_OVER_TEXT,
+    TOUCH_HINT_TEXT,
+    TOUCH_START_TEXT,
+    createDefaultPipes
+} from "../constants";
+import type { GameContextType, GameState, Pipe } from "../types";
 
 const randomPipeHeight = () => PIPE_MIN_HEIGHT + Math.random() * PIPE_HEIGHT_RANGE;
 
-const defaultPipes = [
-    { x: 520, y: randomPipeHeight() },
-    { x: 760, y: randomPipeHeight() },
-    { x: 1000, y: randomPipeHeight() }
-];
-
-type Pipe = { x: number; y: number };
-type GameState = "start" | "running" | "gameover";
-
-type GameContextType = {
-    gameState: GameState;
-    score: number;
-    startGame: () => void;
-    performJump: () => void;
-};
+const defaultPipes = createDefaultPipes();
 
 const GameContext = createContext<GameContextType | undefined>(undefined);
 
@@ -81,8 +74,8 @@ export default function Game() {
     })[0];
 
     const overlayText = useMemo(() => {
-        if (gameState === "start") return isTouch ? "DOKUNARAK BAŞLA" : "SPACE İLE BAŞLA";
-        if (gameState === "gameover") return isTouch ? "OYUN BİTTİ - DOKUNARAK TEKRAR" : "OYUN BİTTİ - SPACE İLE TEKRAR";
+        if (gameState === "start") return isTouch ? TOUCH_START_TEXT : START_TEXT;
+        if (gameState === "gameover") return isTouch ? TOUCH_GAME_OVER_TEXT : `${GAME_OVER_TEXT} - ${START_TEXT}`;
         return "";
     }, [gameState, isTouch]);
 
@@ -249,7 +242,7 @@ export default function Game() {
             ctx.fillStyle = "#ffffff";
             ctx.font = "32px Poppins, sans-serif";
             ctx.textAlign = "left";
-            ctx.fillText(`Puan: ${scoreRef.current}`, SCORE_TEXT_X, SCORE_TEXT_Y);
+            ctx.fillText(`${SCORE_LABEL}: ${scoreRef.current}`, SCORE_TEXT_X, SCORE_TEXT_Y);
 
             if (overlayText) {
                 ctx.fillStyle = "rgba(0,0,0,0.65)";
@@ -350,11 +343,11 @@ export default function Game() {
                         }}
                         onClick={handleFullscreenButtonClick}
                     >
-                        Tam ekran oyna
+                        {FULLSCREEN_BUTTON_TEXT}
                     </button>
                 )}
                 {gameState !== "running" && !overlayText && (
-                    <div className="touch-hint">{isTouch ? "Dokunarak başla" : "Oyna: boşluk tuşuna bas veya ekrana tıkla"}</div>
+                    <div className="touch-hint">{isTouch ? TOUCH_HINT_TEXT : KEYBOARD_HINT_TEXT}</div>
                 )}
             </div>
         </GameContext.Provider>
