@@ -1,5 +1,4 @@
 import Game from "./components/Game";
-import Footer from "./components/Footer";
 
 export default function App() {
     return (
@@ -7,7 +6,6 @@ export default function App() {
             <div className="flex h-full w-full items-center justify-center bg-transparent p-0">
                 <Game />
             </div>
-            <Footer />
         </div>
     );
 }

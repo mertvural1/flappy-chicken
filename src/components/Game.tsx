@@ -37,9 +37,11 @@ import {
     createDefaultPipes
 } from "../constants";
 import type { GameContextType, GameState, Pipe } from "../types";
+import Footer from "./Footer";
 
 const randomPipeHeight = () => PIPE_MIN_HEIGHT + Math.random() * PIPE_HEIGHT_RANGE;
 
+const RESTART_BUTTON_TEXT = "Restart";
 const defaultPipes = createDefaultPipes();
 
 const GameContext = createContext<GameContextType | undefined>(undefined);
@@ -318,7 +320,7 @@ export default function Game() {
     const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
         e.preventDefault();
         if (gameState !== "running") {
-            startGame();
+            return;
         }
         performJump();
     };
@@ -329,13 +331,10 @@ export default function Game() {
         startGame();
     };
 
-    const handleFullscreenButtonClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    const handleRestartButtonClick = (e: React.MouseEvent<HTMLButtonElement>) => {
         e.preventDefault();
         e.stopPropagation();
-        if (gameState !== "running") {
-            setIsFullscreenEnabled((previousValue) => !previousValue);
-        }
-        enterFullscreen();
+        startGame();
     };
 
     return (
@@ -344,7 +343,6 @@ export default function Game() {
                 ref={gameContainerRef}
                 className="relative h-screen w-screen overflow-hidden bg-transparent touch-none cursor-pointer"
                 onPointerDown={handlePointerDown}
-                onClick={(e) => e.preventDefault()}
             >
                 <canvas ref={canvasRef} width={CANVAS_WIDTH} height={CANVAS_HEIGHT} className="block h-full w-full" />
                 {gameState === "start" && (
@@ -357,7 +355,7 @@ export default function Game() {
                             </p>
 
 
-                            <div className="mt-5 flex flex-col gap-3 sm:flex-row">
+                            <div className="mt-5 flex flex-col gap-3">
                                 <button
                                     type="button"
                                     className="flex-1 rounded-full bg-[#ffb84d] px-4 py-3 text-base font-black text-[#1f2a44] shadow-[0_10px_24px_rgba(255,184,77,0.35)] transition-transform active:scale-[0.98]"
@@ -365,20 +363,14 @@ export default function Game() {
                                 >
                                     Start Game
                                 </button>
-                                <button
-                                    type="button"
-                                    className="flex-1 rounded-full border border-[#e3e8f0] bg-white px-4 py-3 text-base font-semibold text-[#1f2a44]"
-                                    onClick={handleFullscreenButtonClick}
-                                >
-                                    {FULLSCREEN_BUTTON_TEXT}
-                                </button>
+                                  <Footer />
                             </div>
                         </div>
                     </div>
                 )}
               
                 {gameState === "gameover" && (
-                    <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center bg-black/40 px-4">
+                    <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/40 px-4">
                         <div className="w-full max-w-[320px] rounded-[28px] border border-white/20 bg-white/95 p-5 text-center shadow-2xl">
                             <img
                                 src="https://media.tenor.com/KhMHIViGxysAAAAM/roast-chiken.gif"
@@ -387,6 +379,13 @@ export default function Game() {
                             />
                             <p className="mt-3 text-lg font-black text-[#6b2c0f]">The chicken got roasted.</p>
                             <p className="mt-1 text-sm font-medium text-[#8f4d24]">Tap to serve another round.</p>
+                            <button
+                                type="button"
+                                className="mt-5 w-full rounded-full bg-[#ffb84d] px-4 py-3 text-base font-black text-[#1f2a44] shadow-[0_10px_24px_rgba(255,184,77,0.35)] transition-transform active:scale-[0.98]"
+                                onClick={handleRestartButtonClick}
+                            >
+                                {RESTART_BUTTON_TEXT}
+                            </button>
                         </div>
                     </div>
                 )}
