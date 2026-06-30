@@ -29,6 +29,7 @@ import {
     SCORE_TEXT_X,
     SCORE_TEXT_Y,
     createDefaultPipes,
+    ROASTED_CHICKEN_ICON_URL,
     FLAME_POLE_COLOR,
     FLAME_POLE_GRADIENT_START,
     FLAME_POLE_GRADIENT_END,
@@ -60,6 +61,7 @@ export default function Game() {
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
     const gameContainerRef = useRef<HTMLDivElement | null>(null);
     const chickenImageRef = useRef<HTMLImageElement | null>(null);
+    const roastedChickenImageRef = useRef<HTMLImageElement | null>(null);
     const [score, setScore] = useState(0);
     const [gameState, setGameState] = useState<GameState>("start");
     const [isFullscreenEnabled, setIsFullscreenEnabled] = useState(false);
@@ -131,8 +133,15 @@ export default function Game() {
             chickenImageRef.current = chickenImage;
         };
 
+        const roastedChickenImage = new Image();
+        roastedChickenImage.src = ROASTED_CHICKEN_ICON_URL;
+        roastedChickenImage.onload = () => {
+            roastedChickenImageRef.current = roastedChickenImage;
+        };
+
         return () => {
             chickenImageRef.current = null;
+            roastedChickenImageRef.current = null;
         };
     }, []);
 
@@ -196,8 +205,10 @@ export default function Game() {
             ctx.fillStyle = "#53912d";
             ctx.fillRect(0, CANVAS_HEIGHT - FLOOR_HEIGHT - FLOOR_BORDER_HEIGHT, CANVAS_WIDTH, FLOOR_BORDER_HEIGHT);
 
-            if (chickenImageRef.current) {
-                ctx.drawImage(chickenImageRef.current, chicken.current.x, chicken.current.y, BIRD_SIZE, BIRD_SIZE);
+            const birdImage = gameState === "gameover" ? roastedChickenImageRef.current ?? chickenImageRef.current : chickenImageRef.current;
+
+            if (birdImage) {
+                ctx.drawImage(birdImage, chicken.current.x, chicken.current.y, BIRD_SIZE, BIRD_SIZE);
             } else {
                 ctx.fillStyle = "#ffcf6a";
                 ctx.beginPath();
@@ -435,7 +446,7 @@ export default function Game() {
               
                 {gameState === "gameover" && (
                     <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/40 px-4">
-                        <div className="w-full max-w-[320px] rounded-[28px] border border-white/20 bg-white/95 p-5 text-center shadow-2xl">
+                        <div className="w-full max-w-[320px] rounded-[28px] border border-white/20 bg-white/90 p-5 text-center shadow-2xl">
                             <img
                                 src="https://media.tenor.com/KhMHIViGxysAAAAM/roast-chiken.gif"
                                 alt="Roasted chicken animation"

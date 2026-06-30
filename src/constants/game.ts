@@ -24,6 +24,7 @@ export const OVERLAY_Y_OFFSET = 70;
 export const SCORE_TEXT_X = 22;
 export const SCORE_TEXT_Y = 52;
 export const CHICKEN_ICON_URL = "https://img.icons8.com/?size=96&id=101707&format=png";
+export const ROASTED_CHICKEN_ICON_URL = "https://cdn-icons-png.flaticon.com/512/1206/1206237.png";
 export const CLOUD_SPEED = 0.5;
 export const START_TEXT = "START WITH SPACE";
 export const TOUCH_START_TEXT = "TAP TO START";
