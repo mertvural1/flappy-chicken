@@ -13,7 +13,6 @@ import {
     GAME_OVER_TEXT,
     GRAVITY,
     JUMP_VELOCITY,
-    KEYBOARD_HINT_TEXT,
     OVERLAY_HEIGHT,
     OVERLAY_PADDING,
     OVERLAY_Y_OFFSET,
@@ -29,10 +28,15 @@ import {
     SCORE_LABEL,
     SCORE_TEXT_X,
     SCORE_TEXT_Y,
-    START_TEXT,
-    TOUCH_GAME_OVER_TEXT,
-    TOUCH_HINT_TEXT,
-    createDefaultPipes
+    createDefaultPipes,
+    FLAME_POLE_COLOR,
+    FLAME_POLE_GRADIENT_START,
+    FLAME_POLE_GRADIENT_END,
+    FLAME_FLAME_COLORS,
+    FLAME_SEGMENTS,
+    FLAME_HEIGHT_MAX,
+    FLAME_WIDTH_MIN,
+    FLAME_WIDTH_MAX
 } from "../constants";
 import type { GameContextType, GameState, Pipe } from "../types";
 import Footer from "./Footer";
@@ -77,10 +81,8 @@ export default function Game() {
     })[0];
 
     const overlayText = useMemo(() => {
-        if (gameState === "start") return "";
-        if (gameState === "gameover") return isTouch ? TOUCH_GAME_OVER_TEXT : `${GAME_OVER_TEXT} - ${START_TEXT}`;
         return "";
-    }, [gameState, isTouch]);
+    }, [gameState]);
 
     const performJump = () => {
         if (!isAlive.current) return;
@@ -230,17 +232,79 @@ export default function Game() {
                 ctx.fill();
             }
 
+            const phase = performance.now() * 0.002;
+
+            const drawFlameLayer = (
+                context: CanvasRenderingContext2D,
+                x: number,
+                baseY: number,
+                isBottom: boolean,
+                localPhase: number
+            ) => {
+                const direction = isBottom ? 1 : -1;
+                const segmentWidth = (PIPE_WIDTH - 8) / FLAME_SEGMENTS;
+
+                for (let index = 0; index < FLAME_SEGMENTS; index += 1) {
+                    const offsetX = x + 4 + index * segmentWidth;
+                    const flameHeight = FLAME_HEIGHT_MAX * (0.7 + 0.3 * Math.sin(localPhase + index * 1.3));
+                    const flameWidth = FLAME_WIDTH_MIN + (FLAME_WIDTH_MAX - FLAME_WIDTH_MIN) * Math.abs(Math.sin(localPhase + index * 1.15));
+                    const peakX = offsetX + flameWidth * 0.5;
+
+                    context.beginPath();
+                    context.moveTo(offsetX, baseY);
+                    context.bezierCurveTo(
+                        offsetX + flameWidth * 0.2,
+                        baseY + direction * flameHeight * 0.35,
+                        peakX - flameWidth * 0.2,
+                        baseY + direction * flameHeight * 0.75,
+                        peakX,
+                        baseY + direction * flameHeight
+                    );
+                    context.bezierCurveTo(
+                        peakX + flameWidth * 0.2,
+                        baseY + direction * flameHeight * 0.75,
+                        offsetX + flameWidth - flameWidth * 0.2,
+                        baseY + direction * flameHeight * 0.35,
+                        offsetX + flameWidth,
+                        baseY
+                    );
+
+                    const gradientFill = context.createLinearGradient(0, baseY, 0, baseY + direction * flameHeight);
+                    gradientFill.addColorStop(0, FLAME_FLAME_COLORS[0]);
+                    gradientFill.addColorStop(0.4, FLAME_FLAME_COLORS[1]);
+                    gradientFill.addColorStop(0.75, FLAME_FLAME_COLORS[2]);
+                    gradientFill.addColorStop(1, FLAME_FLAME_COLORS[3]);
+
+                    context.fillStyle = gradientFill;
+                    context.fill();
+                }
+            };
+
+            const drawFlamePole = (context: CanvasRenderingContext2D, pipe: Pipe, localPhase: number) => {
+                const topHeight = pipe.y;
+                const bottomY = pipe.y + PIPE_GAP;
+                const bottomHeight = CANVAS_HEIGHT - FLOOR_HEIGHT - bottomY;
+
+                const poleGradient = context.createLinearGradient(pipe.x, 0, pipe.x + PIPE_WIDTH, 0);
+                poleGradient.addColorStop(0, FLAME_POLE_GRADIENT_START);
+                poleGradient.addColorStop(1, FLAME_POLE_GRADIENT_END);
+
+                context.fillStyle = poleGradient;
+                context.fillRect(pipe.x, 0, PIPE_WIDTH, topHeight);
+                context.fillRect(pipe.x, bottomY, PIPE_WIDTH, bottomHeight);
+
+                context.fillStyle = FLAME_POLE_COLOR;
+                context.fillRect(pipe.x, topHeight - PIPE_CAP_HEIGHT, PIPE_WIDTH, PIPE_CAP_HEIGHT);
+                context.fillRect(pipe.x, bottomY, PIPE_WIDTH, PIPE_CAP_HEIGHT);
+
+                drawFlameLayer(context, pipe.x, topHeight, false, localPhase + pipe.x * 0.05);
+                drawFlameLayer(context, pipe.x, bottomY, true, localPhase + pipe.x * 0.05);
+            };
+
             if (gameState === "running") {
                 pipesRef.current.forEach((pipe) => {
                     if (pipe.x + PIPE_WIDTH < 0 || pipe.x > CANVAS_WIDTH) return;
-                    ctx.fillStyle = "#2f8e44";
-                    ctx.fillRect(pipe.x, 0, PIPE_WIDTH, pipe.y);
-                    ctx.fillStyle = "#1f5f31";
-                    ctx.fillRect(pipe.x, pipe.y - PIPE_CAP_HEIGHT, PIPE_WIDTH, PIPE_CAP_HEIGHT);
-                    ctx.fillStyle = "#2f8e44";
-                    ctx.fillRect(pipe.x, pipe.y + PIPE_GAP, PIPE_WIDTH, CANVAS_HEIGHT - pipe.y - PIPE_GAP - FLOOR_HEIGHT);
-                    ctx.fillStyle = "#1f5f31";
-                    ctx.fillRect(pipe.x, pipe.y + PIPE_GAP, PIPE_WIDTH, PIPE_CAP_HEIGHT);
+                    drawFlamePole(ctx, pipe, phase);
                 });
             }
 
@@ -387,11 +451,6 @@ export default function Game() {
                                 {RESTART_BUTTON_TEXT}
                             </button>
                         </div>
-                    </div>
-                )}
-                {gameState === "gameover" && (
-                    <div className="pointer-events-none absolute inset-0 grid place-items-center bg-[linear-gradient(180deg,rgba(4,16,38,0.14),rgba(2,11,24,0.78))] p-4 text-center text-[1.05rem] text-[#f4f9ff]">
-                        {isTouch ? TOUCH_HINT_TEXT : KEYBOARD_HINT_TEXT}
                     </div>
                 )}
             </div>

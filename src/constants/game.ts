@@ -34,6 +34,15 @@ export const TOUCH_HINT_TEXT = "Tap to start";
 export const KEYBOARD_HINT_TEXT = "Play: press the space bar or tap the screen";
 export const SCORE_LABEL = "Score";
 
+export const FLAME_POLE_COLOR = "#2c2c2c";
+export const FLAME_POLE_GRADIENT_START = "#3c3c3c";
+export const FLAME_POLE_GRADIENT_END = "#171717";
+export const FLAME_FLAME_COLORS = ["#ffec82", "#ff9f33", "#ff5622", "#ff1f00"];
+export const FLAME_SEGMENTS = 4;
+export const FLAME_HEIGHT_MAX = 34;
+export const FLAME_WIDTH_MIN = 10;
+export const FLAME_WIDTH_MAX = 18;
+
 export const CLOUDS: Cloud[] = [
     { x: 80, y: 120, width: 70, height: 34 },
     { x: 250, y: 180, width: 92, height: 42 },

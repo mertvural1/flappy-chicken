@@ -18,6 +18,7 @@ Always follow these rules when generating or modifying code.
 - Never use magic numbers or magic strings.
 - Move every constant to the top of the file.
 - Constant names must use UPPER_SNAKE_CASE.
+- When a fixed value or magic number belongs to shared logic, move it into the relevant `constants` folder.
 
 Example:
 
