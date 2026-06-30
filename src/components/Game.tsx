@@ -56,6 +56,7 @@ export default function Game() {
     const chickenImageRef = useRef<HTMLImageElement | null>(null);
     const [score, setScore] = useState(0);
     const [gameState, setGameState] = useState<GameState>("start");
+    const [isFullscreenEnabled, setIsFullscreenEnabled] = useState(false);
     const chicken = useRef({ x: BIRD_START_X, y: BIRD_START_Y, vy: 0 });
     const cloudsRef = useRef(CLOUDS.map((cloud) => ({ ...cloud })));
     const gravity = useRef(GRAVITY);
@@ -74,7 +75,7 @@ export default function Game() {
     })[0];
 
     const overlayText = useMemo(() => {
-        if (gameState === "start") return isTouch ? TOUCH_START_TEXT : START_TEXT;
+        if (gameState === "start") return "";
         if (gameState === "gameover") return isTouch ? TOUCH_GAME_OVER_TEXT : `${GAME_OVER_TEXT} - ${START_TEXT}`;
         return "";
     }, [gameState, isTouch]);
@@ -102,7 +103,9 @@ export default function Game() {
         gravity.current = GRAVITY;
         isAlive.current = true;
         setGameState("running");
-        enterFullscreen();
+        if (isFullscreenEnabled) {
+            enterFullscreen();
+        }
     };
 
     useEffect(() => {
@@ -320,13 +323,19 @@ export default function Game() {
         performJump();
     };
 
+    const handleStartButtonClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+        e.preventDefault();
+        e.stopPropagation();
+        startGame();
+    };
+
     const handleFullscreenButtonClick = (e: React.MouseEvent<HTMLButtonElement>) => {
         e.preventDefault();
         e.stopPropagation();
-        enterFullscreen();
         if (gameState !== "running") {
-            startGame();
+            setIsFullscreenEnabled((previousValue) => !previousValue);
         }
+        enterFullscreen();
     };
 
     return (
@@ -338,19 +347,36 @@ export default function Game() {
                 onClick={(e) => e.preventDefault()}
             >
                 <canvas ref={canvasRef} width={CANVAS_WIDTH} height={CANVAS_HEIGHT} className="block h-full w-full" />
-                {isTouch && gameState !== "running" && (
-                    <button
-                        type="button"
-                        className="absolute bottom-6 left-1/2 z-10 -translate-x-1/2 rounded-full border-none bg-[#ffb84d] px-4 py-3 text-[0.98rem] font-bold text-[#1f2a44] shadow-[0_10px_24px_rgba(0,0,0,0.25)] active:scale-[0.98]"
-                        onPointerDown={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                        }}
-                        onClick={handleFullscreenButtonClick}
-                    >
-                        {FULLSCREEN_BUTTON_TEXT}
-                    </button>
+                {gameState === "start" && (
+                    <div className="absolute inset-0 z-20 flex items-center justify-center bg-[linear-gradient(180deg,rgba(3,10,22,0.18),rgba(1,7,16,0.7))] px-4">
+                        <div className="w-full max-w-[360px] rounded-[30px] border border-white/20 bg-white/95 p-6 text-center shadow-[0_20px_60px_rgba(0,0,0,0.3)]">
+                            <p className="text-sm font-semibold uppercase tracking-[0.3em] text-[#8f4d24]">Flappy Chicken</p>
+                            <h1 className="mt-2 text-[2rem] font-black text-[#1f2a44]">Ready to fly?</h1>
+                            <p className="mt-3 text-sm leading-6 text-[#5b6578]">
+                                Tap or press space to jump, dodge the pipes, and keep the chicken soaring.
+                            </p>
+
+
+                            <div className="mt-5 flex flex-col gap-3 sm:flex-row">
+                                <button
+                                    type="button"
+                                    className="flex-1 rounded-full bg-[#ffb84d] px-4 py-3 text-base font-black text-[#1f2a44] shadow-[0_10px_24px_rgba(255,184,77,0.35)] transition-transform active:scale-[0.98]"
+                                    onClick={handleStartButtonClick}
+                                >
+                                    Start Game
+                                </button>
+                                <button
+                                    type="button"
+                                    className="flex-1 rounded-full border border-[#e3e8f0] bg-white px-4 py-3 text-base font-semibold text-[#1f2a44]"
+                                    onClick={handleFullscreenButtonClick}
+                                >
+                                    {FULLSCREEN_BUTTON_TEXT}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 )}
+              
                 {gameState === "gameover" && (
                     <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center bg-black/40 px-4">
                         <div className="w-full max-w-[320px] rounded-[28px] border border-white/20 bg-white/95 p-5 text-center shadow-2xl">
@@ -364,8 +390,8 @@ export default function Game() {
                         </div>
                     </div>
                 )}
-                {gameState !== "running" && !overlayText && (
-                    <div className="pointer-events-none absolute inset-0 grid place-items-center bg-[linear-gradient(180deg,rgba(4,16,38,0.14),rgba(2,11,24,0.78))] p-[18px] text-center text-[1.05rem] text-[#f4f9ff]">
+                {gameState === "gameover" && (
+                    <div className="pointer-events-none absolute inset-0 grid place-items-center bg-[linear-gradient(180deg,rgba(4,16,38,0.14),rgba(2,11,24,0.78))] p-4 text-center text-[1.05rem] text-[#f4f9ff]">
                         {isTouch ? TOUCH_HINT_TEXT : KEYBOARD_HINT_TEXT}
                     </div>
                 )}
