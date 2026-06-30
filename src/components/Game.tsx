@@ -10,7 +10,6 @@ import {
     CLOUD_SPEED,
     FLOOR_BORDER_HEIGHT,
     FLOOR_HEIGHT,
-    FULLSCREEN_BUTTON_TEXT,
     GAME_OVER_TEXT,
     GRAVITY,
     JUMP_VELOCITY,
@@ -33,7 +32,6 @@ import {
     START_TEXT,
     TOUCH_GAME_OVER_TEXT,
     TOUCH_HINT_TEXT,
-    TOUCH_START_TEXT,
     createDefaultPipes
 } from "../constants";
 import type { GameContextType, GameState, Pipe } from "../types";
@@ -42,6 +40,8 @@ import Footer from "./Footer";
 const randomPipeHeight = () => PIPE_MIN_HEIGHT + Math.random() * PIPE_HEIGHT_RANGE;
 
 const RESTART_BUTTON_TEXT = "Restart";
+const PRIMARY_BUTTON_CLASS_NAME =
+    "flex-1 rounded-full bg-[#ffb84d] px-4 py-3 text-base font-black text-[#1f2a44] shadow-[0_10px_24px_rgba(255,184,77,0.35)] transition-transform active:scale-[0.98]";
 const defaultPipes = createDefaultPipes();
 
 const GameContext = createContext<GameContextType | undefined>(undefined);
@@ -358,7 +358,7 @@ export default function Game() {
                             <div className="mt-5 flex flex-col gap-3">
                                 <button
                                     type="button"
-                                    className="flex-1 rounded-full bg-[#ffb84d] px-4 py-3 text-base font-black text-[#1f2a44] shadow-[0_10px_24px_rgba(255,184,77,0.35)] transition-transform active:scale-[0.98]"
+                                    className={PRIMARY_BUTTON_CLASS_NAME}
                                     onClick={handleStartButtonClick}
                                 >
                                     Start Game
@@ -381,7 +381,7 @@ export default function Game() {
                             <p className="mt-1 text-sm font-medium text-[#8f4d24]">Tap to serve another round.</p>
                             <button
                                 type="button"
-                                className="mt-5 w-full rounded-full bg-[#ffb84d] px-4 py-3 text-base font-black text-[#1f2a44] shadow-[0_10px_24px_rgba(255,184,77,0.35)] transition-transform active:scale-[0.98]"
+                                className={`mt-5 w-full ${PRIMARY_BUTTON_CLASS_NAME}`}
                                 onClick={handleRestartButtonClick}
                             >
                                 {RESTART_BUTTON_TEXT}
