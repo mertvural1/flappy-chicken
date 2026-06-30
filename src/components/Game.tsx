@@ -3,11 +3,28 @@ import React, { createContext, useContext, useEffect, useMemo, useRef, useState 
 const CANVAS_WIDTH = 480;
 const CANVAS_HEIGHT = 720;
 const BIRD_SIZE = 36;
+const BIRD_START_X = 120;
+const BIRD_START_Y = (CANVAS_HEIGHT - BIRD_SIZE) / 2;
 const PIPE_WIDTH = 80;
 const PIPE_GAP = 190;
 const PIPE_SPEED = 2.2;
+const PIPE_MIN_HEIGHT = 120;
+const PIPE_HEIGHT_RANGE = 320;
+const GRAVITY = 0.24;
+const JUMP_VELOCITY = -4.2;
+const PIPE_SPAWN_SPACING = 320;
+const PIPE_START_OFFSET = 300;
+const PIPE_RESPAWN_OFFSET = 240;
+const FLOOR_HEIGHT = 100;
+const FLOOR_BORDER_HEIGHT = 16;
+const PIPE_CAP_HEIGHT = 20;
+const OVERLAY_PADDING = 40;
+const OVERLAY_HEIGHT = 140;
+const OVERLAY_Y_OFFSET = 70;
+const SCORE_TEXT_X = 22;
+const SCORE_TEXT_Y = 52;
 
-const randomPipeHeight = () => 120 + Math.random() * 320;
+const randomPipeHeight = () => PIPE_MIN_HEIGHT + Math.random() * PIPE_HEIGHT_RANGE;
 
 const playTickleSound = () => {
     const AudioContext = (window as any).AudioContext || (window as any).webkitAudioContext;
@@ -59,26 +76,15 @@ export const useGame = (): GameContextType => {
 
 export default function Game() {
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
+    const gameContainerRef = useRef<HTMLDivElement | null>(null);
     const [score, setScore] = useState(0);
     const [gameState, setGameState] = useState<GameState>("start");
-    const chicken = useRef({ x: 120, y: CANVAS_HEIGHT / 2 - BIRD_SIZE / 2, vy: 0 });
-    const gravity = useRef(0.24);
+    const chicken = useRef({ x: BIRD_START_X, y: BIRD_START_Y, vy: 0 });
+    const gravity = useRef(GRAVITY);
     const animationRef = useRef(0);
     const scoreRef = useRef(0);
     const pipesRef = useRef<Pipe[]>([]);
     const isAlive = useRef(true);
-
-    const overlayText = useMemo(() => {
-        if (gameState === "start") return "SPACE İLE BAŞLA";
-        if (gameState === "gameover") return "OYUN BİTTİ - SPACE İLE TEKRAR";
-        return "";
-    }, [gameState]);
-
-    const performJump = () => {
-        if (!isAlive.current) return;
-        chicken.current.vy = -4.2;
-        playTickleSound();
-    };
 
     const isTouch = useState(() => {
         if (typeof window === "undefined") return false;
@@ -89,22 +95,37 @@ export default function Game() {
         );
     })[0];
 
-    const startGame = () => {
-        scoreRef.current = 0;
-        setScore(0);
-        const spacing = 320;
-        const startX = CANVAS_WIDTH + 300;
-        pipesRef.current = defaultPipes.map((p, index) => ({ x: startX + index * spacing, y: randomPipeHeight() }));
-        chicken.current = { x: 120, y: CANVAS_HEIGHT / 2 - BIRD_SIZE / 2, vy: 0 };
-        gravity.current = 0.24;
-        isAlive.current = true;
-        setGameState("running");
+    const overlayText = useMemo(() => {
+        if (gameState === "start") return isTouch ? "DOKUNARAK BAŞLA" : "SPACE İLE BAŞLA";
+        if (gameState === "gameover") return isTouch ? "OYUN BİTTİ - DOKUNARAK TEKRAR" : "OYUN BİTTİ - SPACE İLE TEKRAR";
+        return "";
+    }, [gameState, isTouch]);
+
+    const performJump = () => {
+        if (!isAlive.current) return;
+        chicken.current.vy = JUMP_VELOCITY;
+        playTickleSound();
+    };
+
+    const enterFullscreen = () => {
         try {
-            const el = canvasRef.current ?? document.documentElement;
+            const el = gameContainerRef.current ?? canvasRef.current ?? document.documentElement;
             if (el && (el as any).requestFullscreen) {
                 (el as any).requestFullscreen().catch(() => {});
             }
         } catch {}
+    };
+
+    const startGame = () => {
+        scoreRef.current = 0;
+        setScore(0);
+        const startX = CANVAS_WIDTH + PIPE_START_OFFSET;
+        pipesRef.current = defaultPipes.map((p, index) => ({ x: startX + index * PIPE_SPAWN_SPACING, y: randomPipeHeight() }));
+        chicken.current = { x: BIRD_START_X, y: BIRD_START_Y, vy: 0 };
+        gravity.current = GRAVITY;
+        isAlive.current = true;
+        setGameState("running");
+        enterFullscreen();
     };
 
     useEffect(() => {
@@ -174,9 +195,9 @@ export default function Game() {
             ctx.fill();
 
             ctx.fillStyle = "#74c24d";
-            ctx.fillRect(0, CANVAS_HEIGHT - 100, CANVAS_WIDTH, 100);
+            ctx.fillRect(0, CANVAS_HEIGHT - FLOOR_HEIGHT, CANVAS_WIDTH, FLOOR_HEIGHT);
             ctx.fillStyle = "#53912d";
-            ctx.fillRect(0, CANVAS_HEIGHT - 108, CANVAS_WIDTH, 16);
+            ctx.fillRect(0, CANVAS_HEIGHT - FLOOR_HEIGHT - FLOOR_BORDER_HEIGHT, CANVAS_WIDTH, FLOOR_BORDER_HEIGHT);
 
             ctx.fillStyle = "#ffcf6a";
             ctx.beginPath();
@@ -216,22 +237,22 @@ export default function Game() {
                     ctx.fillStyle = "#2f8e44";
                     ctx.fillRect(pipe.x, 0, PIPE_WIDTH, pipe.y);
                     ctx.fillStyle = "#1f5f31";
-                    ctx.fillRect(pipe.x, pipe.y - 20, PIPE_WIDTH, 20);
+                    ctx.fillRect(pipe.x, pipe.y - PIPE_CAP_HEIGHT, PIPE_WIDTH, PIPE_CAP_HEIGHT);
                     ctx.fillStyle = "#2f8e44";
-                    ctx.fillRect(pipe.x, pipe.y + PIPE_GAP, PIPE_WIDTH, CANVAS_HEIGHT - pipe.y - PIPE_GAP - 100);
+                    ctx.fillRect(pipe.x, pipe.y + PIPE_GAP, PIPE_WIDTH, CANVAS_HEIGHT - pipe.y - PIPE_GAP - FLOOR_HEIGHT);
                     ctx.fillStyle = "#1f5f31";
-                    ctx.fillRect(pipe.x, pipe.y + PIPE_GAP, PIPE_WIDTH, 20);
+                    ctx.fillRect(pipe.x, pipe.y + PIPE_GAP, PIPE_WIDTH, PIPE_CAP_HEIGHT);
                 });
             }
 
             ctx.fillStyle = "#ffffff";
             ctx.font = "32px Poppins, sans-serif";
             ctx.textAlign = "left";
-            ctx.fillText(`Puan: ${scoreRef.current}`, 22, 52);
+            ctx.fillText(`Puan: ${scoreRef.current}`, SCORE_TEXT_X, SCORE_TEXT_Y);
 
             if (overlayText) {
                 ctx.fillStyle = "rgba(0,0,0,0.65)";
-                ctx.fillRect(40, CANVAS_HEIGHT / 2 - 70, CANVAS_WIDTH - 80, 140);
+                ctx.fillRect(OVERLAY_PADDING, CANVAS_HEIGHT / 2 - OVERLAY_Y_OFFSET, CANVAS_WIDTH - OVERLAY_PADDING * 2, OVERLAY_HEIGHT);
                 ctx.fillStyle = "#fff";
                 ctx.textAlign = "center";
                 ctx.font = "28px Poppins, sans-serif";
@@ -250,14 +271,14 @@ export default function Game() {
             chicken.current.vy += gravity.current;
             chicken.current.y += chicken.current.vy;
 
-            if (chicken.current.y + BIRD_SIZE > CANVAS_HEIGHT - 100 || chicken.current.y < 0) {
+            if (chicken.current.y + BIRD_SIZE > CANVAS_HEIGHT - FLOOR_HEIGHT || chicken.current.y < 0) {
                 isAlive.current = false;
             }
 
             let nextPipes = pipesRef.current.map((pipe) => ({ x: pipe.x - PIPE_SPEED, y: pipe.y }));
             if (nextPipes[0].x + PIPE_WIDTH < 0) {
                 nextPipes = nextPipes.slice(1);
-                nextPipes.push({ x: nextPipes[nextPipes.length - 1].x + 240, y: randomPipeHeight() });
+                nextPipes.push({ x: nextPipes[nextPipes.length - 1].x + PIPE_RESPAWN_OFFSET, y: randomPipeHeight() });
             }
 
             nextPipes.forEach((pipe) => {
@@ -297,10 +318,32 @@ export default function Game() {
         performJump();
     };
 
+    const handleFullscreenButtonClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+        e.preventDefault();
+        e.stopPropagation();
+        enterFullscreen();
+        if (gameState !== "running") {
+            startGame();
+        }
+    };
+
     return (
         <GameContext.Provider value={{ gameState, score, startGame, performJump }}>
-            <div className="canvas-wrap" onPointerDown={handlePointerDown} onClick={(e) => e.preventDefault()}>
+            <div ref={gameContainerRef} className="canvas-wrap" onPointerDown={handlePointerDown} onClick={(e) => e.preventDefault()}>
                 <canvas ref={canvasRef} width={CANVAS_WIDTH} height={CANVAS_HEIGHT} />
+                {isTouch && gameState !== "running" && (
+                    <button
+                        type="button"
+                        className="fullscreen-button"
+                        onPointerDown={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                        }}
+                        onClick={handleFullscreenButtonClick}
+                    >
+                        Tam ekran oyna
+                    </button>
+                )}
                 {gameState !== "running" && !overlayText && (
                     <div className="touch-hint">{isTouch ? "Dokunarak başla" : "Oyna: boşluk tuşuna bas veya ekrana tıkla"}</div>
                 )}
