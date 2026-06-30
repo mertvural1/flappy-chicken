@@ -351,6 +351,19 @@ export default function Game() {
                         {FULLSCREEN_BUTTON_TEXT}
                     </button>
                 )}
+                {gameState === "gameover" && (
+                    <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center bg-black/40 px-4">
+                        <div className="w-full max-w-[320px] rounded-[28px] border border-white/20 bg-white/95 p-5 text-center shadow-2xl">
+                            <img
+                                src="https://media.tenor.com/KhMHIViGxysAAAAM/roast-chiken.gif"
+                                alt="Roasted chicken animation"
+                                className="mx-auto h-24 w-24 rounded-2xl object-cover shadow-lg"
+                            />
+                            <p className="mt-3 text-lg font-black text-[#6b2c0f]">The chicken got roasted.</p>
+                            <p className="mt-1 text-sm font-medium text-[#8f4d24]">Tap to serve another round.</p>
+                        </div>
+                    </div>
+                )}
                 {gameState !== "running" && !overlayText && (
                     <div className="pointer-events-none absolute inset-0 grid place-items-center bg-[linear-gradient(180deg,rgba(4,16,38,0.14),rgba(2,11,24,0.78))] p-[18px] text-center text-[1.05rem] text-[#f4f9ff]">
                         {isTouch ? TOUCH_HINT_TEXT : KEYBOARD_HINT_TEXT}
